@@ -8,15 +8,17 @@ use Illuminate\Database\Eloquent\Model;
 class PLO extends Model
 {
     use HasFactory;
-    protected $guarded = ['created_at','updated_at'];
+    protected $table = 'p_l_o_s'; // Explicitly define table name
+    protected $guarded = ['created_at', 'updated_at'];
 
-    public function program(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function program()
     {
-        return $this->belongsTo(Degree::class);
+        return $this->belongsTo(Program::class);
     }
 
-    public function peo(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    // Add this to allow reverse lookup of CLOs from a PLO
+    public function clos()
     {
-        return $this->belongsTo(PEO::class);
+        return $this->belongsToMany(CLO::class, 'clo_plo', 'plo_id', 'clo_id');
     }
 }

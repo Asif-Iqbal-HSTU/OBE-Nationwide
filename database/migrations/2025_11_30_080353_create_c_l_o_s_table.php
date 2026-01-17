@@ -16,12 +16,6 @@ return new class extends Migration
             $table->foreignId('course_id')->constrained()->onDelete('cascade');
             $table->integer('clo_no');
             $table->text('clo_desc');
-
-            $table->foreignId('p_l_o_id')
-                ->references('id')
-                ->on('p_l_o_s')
-                ->onDelete('cascade');
-
             $table->timestamps();
         });
 

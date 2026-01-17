@@ -1,10 +1,10 @@
 import React, { useState } from "react";
-import { Head, useForm } from "@inertiajs/react";
+import { Head, useForm, router } from "@inertiajs/react";
 import AppLayout from "@/layouts/app-layout";
 import type { BreadcrumbItem } from "@/types";
 // import { route } from 'ziggy-js';
 // import route from "ziggy-js";
-import { Pencil } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
 
 export default function Index({ umissions }: any) {
     const breadcrumbs: BreadcrumbItem[] = [
@@ -50,6 +50,18 @@ export default function Index({ umissions }: any) {
             umission_no: u.umission_no,
             umission_name: u.umission_name,
         });
+    };
+
+    const handleDelete = (id: number) => {
+        if (confirm("Are you sure you want to delete this umission?")) {
+            router.delete(route("umissions.destroy", id), {
+                onSuccess: () => {
+                    if (data.id === id) {
+                        reset();
+                    }
+                },
+            });
+        }
     };
 
 
@@ -160,14 +172,24 @@ export default function Index({ umissions }: any) {
                                                 </div>
                                             </div>
 
-                                            <button
-                                                type="button"
-                                                onClick={() => handleEdit(u)}
-                                                className="text-blue-600 hover:text-blue-800 transition"
-                                                title="Edit"
-                                            >
-                                                <Pencil size={18} />
-                                            </button>
+                                            <div className="flex gap-2">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleEdit(u)}
+                                                    className="text-blue-600 hover:text-blue-800 transition"
+                                                    title="Edit"
+                                                >
+                                                    <Pencil size={18} />
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleDelete(u.id)}
+                                                    className="text-red-600 hover:text-red-800 transition"
+                                                    title="Delete"
+                                                >
+                                                    <Trash2 size={18} />
+                                                </button>
+                                            </div>
                                         </li>
                                     ))}
                                 </ol>

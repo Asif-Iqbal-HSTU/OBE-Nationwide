@@ -11,6 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Primary Contents Table
         Schema::create('contents', function (Blueprint $table) {
             $table->id();
             $table->foreignId('course_id')->constrained()->onDelete('cascade');
@@ -18,13 +19,14 @@ return new class extends Migration
             $table->text('content');
             $table->text('teaching_strategy');
             $table->text('assessment_strategy');
-//            $table->foreignId('c_l_o_id')->constrained()->onDelete('cascade');
-
-            $table->foreignId('c_l_o_id')
-                ->references('id')
-                ->on('c_l_o_s')
-                ->onDelete('cascade');
             $table->timestamps();
+        });
+
+        // Pivot Table for Many-to-Many with CLOs
+        Schema::create('clo_content', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('content_id')->constrained('contents')->onDelete('cascade');
+            $table->foreignId('clo_id')->constrained('c_l_o_s')->onDelete('cascade');
         });
     }
 

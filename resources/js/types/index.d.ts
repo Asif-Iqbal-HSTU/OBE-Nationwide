@@ -21,6 +21,7 @@ export interface NavItem {
     href: NonNullable<InertiaLinkProps['href']>;
     icon?: LucideIcon | null;
     isActive?: boolean;
+    items?: NavItem[];
 }
 
 export interface SharedData {
@@ -29,6 +30,7 @@ export interface SharedData {
     auth: Auth;
     ziggy: Config & { location: string };
     sidebarOpen: boolean;
+    userPrograms: Program[];
     [key: string]: unknown;
 }
 
@@ -42,4 +44,10 @@ export interface User {
     created_at: string;
     updated_at: string;
     [key: string]: unknown; // This allows for additional properties...
+}
+
+export interface Program {
+    id: number;
+    name: string;
+    short_name: string;
 }

@@ -14,7 +14,7 @@ class UmissionController extends Controller
             ->latest()
             ->get();
 
-        return inertia('Umission/Index', [
+        return inertia('Umission/index', [
             'umissions' => $umissions,
         ]);
     }
@@ -22,13 +22,13 @@ class UmissionController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'umission_no'   => 'required|numeric',
+            'umission_no' => 'required|numeric',
             'umission_name' => 'required|string|max:1000',
         ]);
 
         Umission::create([
-            'user_id'       => Auth::id(),
-            'umission_no'   => $validated['umission_no'],
+            'user_id' => Auth::id(),
+            'umission_no' => $validated['umission_no'],
             'umission_name' => $validated['umission_name'],
         ]);
 
@@ -37,13 +37,28 @@ class UmissionController extends Controller
 
     public function update(Request $request, Umission $umission)
     {
+        if ($umission->user_id !== Auth::id()) {
+            abort(403);
+        }
+
         $validated = $request->validate([
-            'umission_no'   => 'required|numeric',
+            'umission_no' => 'required|numeric',
             'umission_name' => 'required|string|max:1000',
         ]);
 
         $umission->update($validated);
 
         return redirect()->back()->with('success', 'Umission updated successfully');
+    }
+
+    public function destroy(Umission $umission): \Illuminate\Http\RedirectResponse
+    {
+        if ($umission->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        $umission->delete();
+
+        return redirect()->back()->with('success', 'Umission deleted successfully');
     }
 }

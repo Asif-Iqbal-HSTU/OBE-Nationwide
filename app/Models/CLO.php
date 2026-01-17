@@ -14,4 +14,13 @@ class CLO extends Model
     {
         return $this->belongsTo(Course::class);
     }
+
+    public function plos()
+    {
+        return $this->belongsToMany(PLO::class, 'clo_plo', 'clo_id', 'plo_id');
+    }
+
+    public function contents() {
+        return $this->belongsToMany(Content::class, 'clo_content', 'clo_id', 'content_id');
+    }
 }
