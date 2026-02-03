@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\PEO;
 use App\Models\Program;
+use App\Models\Umission;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -17,12 +18,16 @@ class PEOController extends Controller
         }
 
         $peos = PEO::where('program_id', $program->id)
+            ->with('umissions')
             ->orderBy('peo_no')
             ->get();
+
+        $umissions = Umission::where('user_id', Auth::id())->orderBy('umission_no')->get();
 
         return inertia('PEO/index', [
             'program' => $program->load(['faculty', 'department']),
             'peos' => $peos,
+            'umissions' => $umissions,
         ]);
     }
 
@@ -35,13 +40,19 @@ class PEOController extends Controller
         $validated = $request->validate([
             'peo_no' => 'required|integer',
             'peo_name' => 'required|string',
+            'umission_ids' => 'nullable|array',
+            'umission_ids.*' => 'exists:umissions,id',
         ]);
 
-        PEO::create([
+        $peo = PEO::create([
             'program_id' => $program->id,
             'peo_no' => $validated['peo_no'],
             'peo_name' => $validated['peo_name'],
         ]);
+
+        if (isset($validated['umission_ids'])) {
+            $peo->umissions()->sync($validated['umission_ids']);
+        }
 
         return redirect()->back()->with('success', 'PEO created successfully');
     }
@@ -55,9 +66,18 @@ class PEOController extends Controller
         $validated = $request->validate([
             'peo_no' => 'required|integer',
             'peo_name' => 'required|string',
+            'umission_ids' => 'nullable|array',
+            'umission_ids.*' => 'exists:umissions,id',
         ]);
 
-        $peo->update($validated);
+        $peo->update([
+            'peo_no' => $validated['peo_no'],
+            'peo_name' => $validated['peo_name'],
+        ]);
+
+        if (isset($validated['umission_ids'])) {
+            $peo->umissions()->sync($validated['umission_ids']);
+        }
 
         return redirect()->back()->with('success', 'PEO updated successfully');
     }

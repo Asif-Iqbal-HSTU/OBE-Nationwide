@@ -11,6 +11,11 @@ class Department extends Model
 
     protected $guarded = ['created_at', 'updated_at'];
 
+    public function chairman(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(Teacher::class, 'chairman_id');
+    }
+
     public function faculty(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(Faculty::class);

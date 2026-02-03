@@ -21,7 +21,12 @@ import { ChevronRight } from 'lucide-react';
 
 const EXPANDED_KEY = 'sidebar_expanded_items';
 
-export function NavMain({ items = [] }: { items: NavItem[] }) {
+export interface NavGroup {
+    label?: string;
+    items: NavItem[];
+}
+
+export function NavMain({ groups = [] }: { groups: NavGroup[] }) {
     const page = usePage();
 
     const [expanded, setExpanded] = useState<Set<string>>(() => {
@@ -42,8 +47,22 @@ export function NavMain({ items = [] }: { items: NavItem[] }) {
         });
     };
 
-    const isItemActive = (href: string) => {
-        return page.url.startsWith(resolveUrl(href));
+    const isItemActive = (href: any) => {
+        if (typeof href !== 'string') return false;
+
+        const resolvedHref = resolveUrl(href);
+        const currentUrl = page.url;
+
+        // Exact match
+        if (currentUrl === resolvedHref) return true;
+
+        // Prefix match but ensure it's a path segment boundary
+        if (currentUrl.startsWith(resolvedHref)) {
+            const rest = currentUrl.slice(resolvedHref.length);
+            return rest === '' || rest.startsWith('/') || rest.startsWith('?');
+        }
+
+        return false;
     };
 
     const isParentActive = (item: NavItem): boolean => {
@@ -55,21 +74,29 @@ export function NavMain({ items = [] }: { items: NavItem[] }) {
     };
 
     return (
-        <SidebarGroup className="px-2 py-0">
-            <SidebarGroupLabel>Platform</SidebarGroupLabel>
-            <SidebarMenu>
-                {items.map((item) => (
-                    <RecursiveMenuItem
-                        key={item.title}
-                        item={item}
-                        expanded={expanded}
-                        toggle={toggle}
-                        isItemActive={isItemActive}
-                        isParentActive={isParentActive}
-                    />
-                ))}
-            </SidebarMenu>
-        </SidebarGroup>
+        <>
+            {groups.map((group, index) => (
+                <SidebarGroup key={group.label || index} className="px-2 py-0">
+                    {group.label && (
+                        <SidebarGroupLabel className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+                            {group.label}
+                        </SidebarGroupLabel>
+                    )}
+                    <SidebarMenu>
+                        {group.items.map((item) => (
+                            <RecursiveMenuItem
+                                key={item.title}
+                                item={item}
+                                expanded={expanded}
+                                toggle={toggle}
+                                isItemActive={isItemActive}
+                                isParentActive={isParentActive}
+                            />
+                        ))}
+                    </SidebarMenu>
+                </SidebarGroup>
+            ))}
+        </>
     );
 }
 
@@ -78,12 +105,12 @@ export function NavMain({ items = [] }: { items: NavItem[] }) {
 /* ------------------------------------------- */
 
 function RecursiveMenuItem({
-                               item,
-                               expanded,
-                               toggle,
-                               isItemActive,
-                               isParentActive,
-                           }: {
+    item,
+    expanded,
+    toggle,
+    isItemActive,
+    isParentActive,
+}: {
     item: NavItem;
     expanded: Set<string>;
     toggle: (key: string) => void;
@@ -126,9 +153,8 @@ function RecursiveMenuItem({
                     <CollapsibleTrigger asChild>
                         <button className="ml-auto p-2">
                             <ChevronRight
-                                className={`transition-transform ${
-                                    isExpanded ? 'rotate-90' : ''
-                                }`}
+                                className={`transition-transform ${isExpanded ? 'rotate-90' : ''
+                                    }`}
                             />
                         </button>
                     </CollapsibleTrigger>
@@ -158,12 +184,12 @@ function RecursiveMenuItem({
 /* ------------------------------------------- */
 
 function RecursiveSubMenu({
-                              item,
-                              expanded,
-                              toggle,
-                              isItemActive,
-                              isParentActive,
-                          }: {
+    item,
+    expanded,
+    toggle,
+    isItemActive,
+    isParentActive,
+}: {
     item: NavItem;
     expanded: Set<string>;
     toggle: (key: string) => void;
@@ -201,9 +227,8 @@ function RecursiveSubMenu({
                     <CollapsibleTrigger asChild>
                         <button className="ml-auto p-2">
                             <ChevronRight
-                                className={`transition-transform ${
-                                    isExpanded ? 'rotate-90' : ''
-                                }`}
+                                className={`transition-transform ${isExpanded ? 'rotate-90' : ''
+                                    }`}
                             />
                         </button>
                     </CollapsibleTrigger>

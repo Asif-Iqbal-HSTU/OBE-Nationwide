@@ -15,4 +15,14 @@ class PEO extends Model
     {
         return $this->belongsTo(Program::class);
     }
+
+    public function umissions(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(Umission::class, 'peo_umission', 'peo_id', 'umission_id');
+    }
+
+    public function plos(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(PLO::class, 'peo_plo', 'peo_id', 'plo_id');
+    }
 }

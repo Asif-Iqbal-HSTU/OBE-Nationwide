@@ -14,16 +14,33 @@ class ProgramController extends Controller
 {
     public function index()
     {
-        $faculties = Faculty::where('user_id', Auth::id())->get();
+        $user = Auth::user();
+        $teacher = $user->teacher;
 
-        $departments = Department::whereHas('faculty', function ($query) {
-            $query->where('user_id', Auth::id());
-        })->get();
+        $faculties = Faculty::where('user_id', $user->id)
+            ->when($teacher, function ($q) use ($teacher) {
+                $q->orWhere('dean_id', $teacher->id);
+            })->get();
 
-        $programs = Program::whereHas('faculty', function ($query) {
-            $query->where('user_id', Auth::id());
+        $departments = Department::whereHas('faculty', function ($query) use ($user) {
+            $query->where('user_id', $user->id);
+        })
+            ->when($teacher, function ($q) use ($teacher) {
+                $q->orWhere('chairman_id', $teacher->id);
+            })->get();
+
+        $programs = Program::where(function ($q) use ($user, $teacher) {
+            $q->whereHas('faculty', function ($query) use ($user) {
+                $query->where('user_id', $user->id);
+            });
+
+            if ($teacher) {
+                $q->orWhereIn('department_id', Department::where('chairman_id', $teacher->id)->pluck('id'))
+                    ->orWhereIn('faculty_id', Faculty::where('dean_id', $teacher->id)->pluck('id'));
+            }
         })
             ->with(['faculty', 'department'])
+            ->withCount(['peos', 'plos', 'courses'])
             ->latest()
             ->get();
 
@@ -47,10 +64,12 @@ class ProgramController extends Controller
             'department_id' => [
                 'required',
                 'exists:departments,id',
-                Rule::exists('departments', 'id')->whereIn('faculty_id', function ($query) {
-                    $query->select('id')
-                        ->from('faculties')
-                        ->where('user_id', Auth::id());
+                Rule::exists('departments', 'id')->where(function ($query) {
+                    $query->whereIn('faculty_id', function ($sq) {
+                        $sq->select('id')
+                            ->from('faculties')
+                            ->where('user_id', Auth::id());
+                    });
                 }),
             ],
             'vision' => 'nullable|string',
@@ -80,10 +99,12 @@ class ProgramController extends Controller
             'department_id' => [
                 'required',
                 'exists:departments,id',
-                Rule::exists('departments', 'id')->whereIn('faculty_id', function ($query) {
-                    $query->select('id')
-                        ->from('faculties')
-                        ->where('user_id', Auth::id());
+                Rule::exists('departments', 'id')->where(function ($query) {
+                    $query->whereIn('faculty_id', function ($sq) {
+                        $sq->select('id')
+                            ->from('faculties')
+                            ->where('user_id', Auth::id());
+                    });
                 }),
             ],
             'vision' => 'nullable|string',

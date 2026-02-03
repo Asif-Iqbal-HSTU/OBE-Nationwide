@@ -1,16 +1,23 @@
 <?php
 
+use App\Http\Controllers\BookController;
 use App\Http\Controllers\CLOController;
 use App\Http\Controllers\COController;
 use App\Http\Controllers\ContentController;
 use App\Http\Controllers\CourseController;
 use App\Http\Controllers\DepartmentController;
+use App\Http\Controllers\ExamQuestionController;
 use App\Http\Controllers\FacultyController;
 use App\Http\Controllers\GenericSkillController;
+use App\Http\Controllers\LessonPlanController;
+use App\Http\Controllers\ModerationCommitteeController;
 use App\Http\Controllers\PEOController;
 use App\Http\Controllers\PLOController;
 use App\Http\Controllers\ProgramController;
 use App\Http\Controllers\UmissionController;
+use App\Http\Controllers\CourseAssignmentController;
+use App\Http\Controllers\MyCourseController;
+use App\Http\Controllers\TeacherController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
@@ -48,6 +55,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::put('/programs/{program}', [ProgramController::class, 'update'])->name('programs.update');
     Route::delete('/programs/{program}', [ProgramController::class, 'destroy'])->name('programs.destroy');
 
+    Route::get('/teachers', [TeacherController::class, 'index'])->name('teachers.index');
+    Route::post('/teachers', [TeacherController::class, 'store'])->name('teachers.store');
+    Route::put('/teachers/{teacher}', [TeacherController::class, 'update'])->name('teachers.update');
+    Route::delete('/teachers/{teacher}', [TeacherController::class, 'destroy'])->name('teachers.destroy');
+
     // Nested routes for Program Educational Objectives, Program Learning Outcomes, and Generic Skills
     Route::prefix('programs/{program}')->group(function () {
         // PEO routes
@@ -68,9 +80,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::put('/generic-skills/{genericSkill}', [GenericSkillController::class, 'update'])->name('programs.generic-skills.update');
         Route::delete('/generic-skills/{genericSkill}', [GenericSkillController::class, 'destroy'])->name('programs.generic-skills.destroy');
 
-// Inside Route::prefix('programs/{program}')->group(function () { ...
-
-// Courses routes
+        // Courses routes
         Route::get('/courses', [CourseController::class, 'index'])->name('programs.courses.index');
         Route::post('/courses', [CourseController::class, 'store'])->name('programs.courses.store');
         Route::put('/courses/{course}', [CourseController::class, 'update'])->name('programs.courses.update');
@@ -88,9 +98,49 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::post('/contents', [ContentController::class, 'store'])->name('programs.courses.contents.store');
             Route::put('/contents/{content}', [ContentController::class, 'update'])->name('programs.courses.contents.update');
             Route::delete('/contents/{content}', [ContentController::class, 'destroy'])->name('programs.courses.contents.destroy');
+
+            Route::post('/books', [BookController::class, 'store'])->name('programs.courses.books.store');
+            Route::put('/books/{book}', [BookController::class, 'update'])->name('programs.courses.books.update');
+            Route::delete('/books/{book}', [BookController::class, 'destroy'])->name('programs.courses.books.destroy');
+
+            Route::post('/lesson-plans', [LessonPlanController::class, 'store'])->name('programs.courses.lesson-plans.store');
+            Route::put('/lesson-plans/{lessonPlan}', [LessonPlanController::class, 'update'])->name('programs.courses.lesson-plans.update');
+            Route::delete('/lesson-plans/{lessonPlan}', [LessonPlanController::class, 'destroy'])->name('programs.courses.lesson-plans.destroy');
+
+            // Course Assignments
+            Route::post('/assignments', [CourseAssignmentController::class, 'store'])->name('programs.courses.assignments.store');
         });
     });
+
+    Route::post('/course-assignments/{assignment}', [CourseAssignmentController::class, 'destroy'])->name('course-assignments.destroy');
+
+    // Moderation Committee Management (Chairman only)
+    Route::get('/moderation-committees', [ModerationCommitteeController::class, 'index'])->name('moderation-committees.index');
+    Route::post('/moderation-committees', [ModerationCommitteeController::class, 'store'])->name('moderation-committees.store');
+    Route::put('/moderation-committees/{committee}', [ModerationCommitteeController::class, 'update'])->name('moderation-committees.update');
+    Route::delete('/moderation-committees/{committee}', [ModerationCommitteeController::class, 'destroy'])->name('moderation-committees.destroy');
+
+    // Exam Questions - Question Paper Creation by Course Teachers
+    Route::get('/exam-questions', [ExamQuestionController::class, 'index'])->name('exam-questions.index');
+    Route::get('/exam-questions/create', [ExamQuestionController::class, 'create'])->name('exam-questions.create');
+    Route::post('/exam-questions', [ExamQuestionController::class, 'store'])->name('exam-questions.store');
+    Route::get('/exam-questions/{examQuestion}/edit', [ExamQuestionController::class, 'edit'])->name('exam-questions.edit');
+    Route::put('/exam-questions/{examQuestion}', [ExamQuestionController::class, 'update'])->name('exam-questions.update');
+    Route::delete('/exam-questions/{examQuestion}', [ExamQuestionController::class, 'destroy'])->name('exam-questions.destroy');
+    Route::post('/exam-questions/{examQuestion}/submit', [ExamQuestionController::class, 'submit'])->name('exam-questions.submit');
+    Route::get('/exam-questions/{examQuestion}/print', [ExamQuestionController::class, 'print'])->name('exam-questions.print');
+
+    // Moderation Process - For Committee Members
+    Route::get('/moderation', [ExamQuestionController::class, 'moderation'])->name('moderation.index');
+    Route::get('/moderation/{examQuestion}', [ExamQuestionController::class, 'showModeration'])->name('moderation.show');
+    Route::post('/moderation/{examQuestion}/approve', [ExamQuestionController::class, 'approve'])->name('moderation.approve');
+    Route::post('/moderation/{examQuestion}/revision', [ExamQuestionController::class, 'requestRevision'])->name('moderation.revision');
+
+    // My Courses - For Course Teachers
+    Route::get('/my-courses', [MyCourseController::class, 'index'])->name('my-courses.index');
+    Route::get('/my-courses/{assignment}', [MyCourseController::class, 'show'])->name('my-courses.show');
+    Route::get('/my-courses/{assignment}/exam-questions/create', [MyCourseController::class, 'createExamQuestion'])->name('my-courses.exam-questions.create');
+    Route::post('/my-courses/{assignment}/exam-questions', [MyCourseController::class, 'storeExamQuestion'])->name('my-courses.exam-questions.store');
 });
 
-require __DIR__.'/settings.php';
-
+require __DIR__ . '/settings.php';

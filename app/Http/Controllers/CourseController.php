@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Course;
 use App\Models\Program;
+use App\Models\CourseAssignment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\RedirectResponse;
@@ -12,13 +13,50 @@ class CourseController extends Controller
 {
     public function index(Program $program)
     {
-        if ($program->faculty->user_id !== Auth::id()) {
-            abort(403);
+        $user = Auth::user();
+        $teacher = $user->teacher;
+
+        // Dynamic checks
+        $isChairman = $teacher && \App\Models\Department::where('id', $program->department_id)->where('chairman_id', $teacher->id)->exists();
+        $isDean = $teacher && \App\Models\Faculty::where('id', $program->faculty_id)->where('dean_id', $teacher->id)->exists();
+        $isAdmin = $user->isAdmin();
+
+        // Authorization check
+        $canAccess = false;
+        if ($isAdmin) {
+            $canAccess = true;
+        } elseif ($isDean) {
+            $canAccess = true;
+        } elseif ($isChairman) {
+            $canAccess = true;
+        } elseif ($user->isTeacher() && $teacher) {
+            // Teachers can see the program if they have any assigned course in it
+            $hasAssignment = CourseAssignment::where('teacher_id', $teacher->id)
+                ->whereIn('course_id', $program->courses->pluck('id'))
+                ->exists();
+            if ($hasAssignment) {
+                $canAccess = true;
+            }
         }
+
+        if (!$canAccess) {
+            abort(403, 'You do not have permission to view this program curriculum.');
+        }
+
+        // Get teachers for the department to allow assignment
+        $teachers = \App\Models\Teacher::where('department_id', $program->department_id)
+            ->select('id', 'name', 'designation')
+            ->get();
 
         return inertia('Courses/index', [
             'program' => $program->load(['faculty', 'department', 'plos']),
-            'courses' => Course::where('program_id', $program->id)->with(['cos', 'clos.plos', 'contents.clos'])->get(),
+            'courses' => Course::where('program_id', $program->id)
+                ->with(['cos', 'clos.plos', 'contents.clos', 'books', 'lessonPlans.clos', 'assignments', 'teachers'])
+                ->get(),
+            'teachers' => $teachers,
+            'auth_teacher_id' => $teacher ? $teacher->id : null,
+            'is_admin' => $isAdmin,
+            'is_chairman' => $isChairman || $isDean, // Both roles can assign
         ]);
     }
 
@@ -48,6 +86,31 @@ class CourseController extends Controller
 
     public function update(Request $request, Program $program, Course $course): RedirectResponse
     {
+        $user = Auth::user();
+        $teacher = $user->teacher;
+
+        $isChairman = $teacher && \App\Models\Department::where('id', $program->department_id)->where('chairman_id', $teacher->id)->exists();
+        $isDean = $teacher && \App\Models\Faculty::where('id', $program->faculty_id)->where('dean_id', $teacher->id)->exists();
+
+        $canEdit = false;
+        if ($user->isAdmin()) {
+            $canEdit = true;
+        } elseif ($isChairman || $isDean) {
+            $canEdit = true;
+        } elseif ($user->isTeacher() && $teacher) {
+            // Check if this teacher is assigned to this course
+            $isAssigned = CourseAssignment::where('course_id', $course->id)
+                ->where('teacher_id', $teacher->id)
+                ->exists();
+            if ($isAssigned) {
+                $canEdit = true;
+            }
+        }
+
+        if (!$canEdit) {
+            abort(403, 'You are not authorized to edit this course.');
+        }
+
         $validated = $request->validate([
             'name' => 'required|string',
             'code' => 'required|string',

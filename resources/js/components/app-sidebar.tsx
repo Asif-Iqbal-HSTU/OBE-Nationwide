@@ -1,5 +1,4 @@
-import { NavFooter } from '@/components/nav-footer';
-import { NavMain } from '@/components/nav-main';
+import { NavMain, type NavGroup } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
 import {
     Sidebar,
@@ -16,99 +15,125 @@ import { Link, usePage } from '@inertiajs/react';
 import {
     BookOpen,
     Building2,
-    Folder,
+    ClipboardCheck,
+    FileQuestion,
     GraduationCap,
     LayoutGrid,
     Lightbulb,
     Network,
     Target,
     Trophy,
+    Users,
 } from 'lucide-react';
 import AppLogo from './app-logo';
-import ResizableSidebar from '@/components/resizable-sidebar';
-
-const footerNavItems: NavItem[] = [
-    {
-        title: 'Repository',
-        href: 'https://github.com/laravel/react-starter-kit',
-        icon: Folder,
-    },
-    {
-        title: 'Documentation',
-        href: 'https://laravel.com/docs/starter-kits#react',
-        icon: BookOpen,
-    },
-];
 
 export function AppSidebar() {
-    const { userPrograms } = usePage<SharedData>().props;
+    const { userPrograms, auth } = usePage<SharedData>().props;
+    const { user, isChairman, isDean } = auth;
 
-    // Build dynamic program sub-items
-    const programSubItems: NavItem[] =
-        userPrograms?.map((program) => ({
+    const isAdmin = user.role === 'admin';
+
+    // Helper to build sub-items
+    const buildProgramSubItems = (programs: any[]) =>
+        programs?.map((program) => ({
             title: program.short_name || program.name,
             icon: GraduationCap,
-
-            // 👇 clicking program name opens Program dashboard (optional)
             href: `/programs/${program.id}`,
-
-            // 👇 second-level submenu
             items: [
-                {
-                    title: 'PEO',
-                    href: `/programs/${program.id}/peos`,
-                    icon: Target,
-                },
-                {
-                    title: 'PLO',
-                    href: `/programs/${program.id}/plos`,
-                    icon: Trophy,
-                },
-                {
-                    title: 'Generic Skills',
-                    href: `/programs/${program.id}/generic-skills`,
-                    icon: Lightbulb,
-                },
-
-                // 👇 Future-ready
-                {
-                    title: 'Courses',
-                    href: `/programs/${program.id}/courses`,
-                    icon: BookOpen
-                },
+                { title: 'PEOs', href: `/programs/${program.id}/peos`, icon: Target },
+                { title: 'PLOs', href: `/programs/${program.id}/plos`, icon: Trophy },
+                { title: 'Generic Skills', href: `/programs/${program.id}/generic-skills`, icon: Lightbulb },
+                { title: 'Courses', href: `/programs/${program.id}/courses`, icon: BookOpen },
             ],
         })) || [];
 
-    // Build navigation items with programs nested under Programs menu
-    const allNavItems: NavItem[] = [
-        {
-            title: 'Dashboard',
-            href: dashboard(),
-            icon: LayoutGrid,
-        },
-        {
-            title: 'University Missions',
-            href: '/umissions',
-            icon: Target,
-        },
-        {
-            title: 'Faculties',
-            href: '/faculties',
-            icon: Building2,
-        },
-        {
-            title: 'Departments',
-            href: '/departments',
-            icon: Network,
-        },
-        // ✅ Programs links to index page AND expands dropdown
-        {
-            title: 'Programs',
-            href: '/programs', // <-- index page
-            icon: GraduationCap,
-            items: programSubItems, // <-- dropdown list
-        },
-    ];
+    // Build items for assigned courses
+    const buildCourseItems = (courses: any[]) =>
+        courses?.map((course) => ({
+            title: `${course.code} ${course.name}`,
+            icon: BookOpen,
+            // Link to the main courses page for the program - teachers can manage their course there
+            href: `/programs/${course.program_id}/courses`,
+        })) || [];
+
+    const teachingItems = buildCourseItems(userPrograms?.myCourses || []);
+    const managedItems = buildProgramSubItems(userPrograms?.managed || []);
+
+    // Build grouped navigation
+    const navGroups: NavGroup[] = [];
+
+    // 1. Dashboard always shows
+    navGroups.push({
+        items: [{ title: 'Dashboard', href: dashboard(), icon: LayoutGrid }],
+    });
+
+    // 2. Foundation (Admin only)
+    if (isAdmin) {
+        navGroups.push({
+            label: 'Foundation',
+            items: [
+                { title: 'University Missions', href: '/umissions', icon: Target },
+                { title: 'Faculties', href: '/faculties', icon: Building2 },
+                { title: 'Departments', href: '/departments', icon: Network },
+                { title: 'Teachers', href: '/teachers', icon: Users },
+            ],
+        });
+    }
+
+    // 3. Your Courses (Teachers, Chairmen, Deans) - Now links to dedicated /my-courses page
+    if (!isAdmin) {
+        const courseLinks = teachingItems.length > 0
+            ? [
+                { title: 'My Courses', href: '/my-courses', icon: BookOpen },
+                ...teachingItems.map((item) => ({ ...item, href: '/my-courses' })),
+            ]
+            : [{ title: 'My Courses', href: '/my-courses', icon: BookOpen }];
+
+        navGroups.push({
+            label: 'Your Courses',
+            items: [{ title: 'My Courses', href: '/my-courses', icon: BookOpen }],
+        });
+    } else if (teachingItems.length > 0) {
+        navGroups.push({
+            label: 'Your Courses',
+            items: [{ title: 'My Courses', href: '/my-courses', icon: BookOpen }],
+        });
+    }
+
+    // 4. Course Distribution / Managed Programs (Admin/Chairman/Dean)
+    if (isAdmin) {
+        navGroups.push({
+            label: 'Academic Programs',
+            items: [
+                { title: 'All Programs', href: '/programs', icon: GraduationCap },
+                ...managedItems,
+            ],
+        });
+    } else if (isChairman || isDean) {
+        navGroups.push({
+            label: 'Course Distribution',
+            items: managedItems.length > 0 ? managedItems : [
+                { title: 'No programs managed', href: '#', icon: GraduationCap }
+            ],
+        });
+    }
+
+    // 5. Examination & Moderation
+    const examItems = [];
+    if (isChairman || isAdmin) {
+        examItems.push({ title: 'Committees', href: '/moderation-committees', icon: Users });
+    }
+    // Teachers can access moderation queue for questions that need review
+    if (!isAdmin) {
+        examItems.push({ title: 'Moderation Queue', href: '/moderation', icon: ClipboardCheck });
+    }
+
+    if (examItems.length > 0) {
+        navGroups.push({
+            label: 'Examination & Moderation',
+            items: examItems,
+        });
+    }
 
     return (
         <Sidebar collapsible="icon" variant="inset">
@@ -125,11 +150,10 @@ export function AppSidebar() {
             </SidebarHeader>
 
             <SidebarContent>
-                <NavMain items={allNavItems} />
+                <NavMain groups={navGroups} />
             </SidebarContent>
 
             <SidebarFooter>
-                {/*<NavFooter items={footerNavItems} className="mt-auto" />*/}
                 <NavUser />
             </SidebarFooter>
         </Sidebar>

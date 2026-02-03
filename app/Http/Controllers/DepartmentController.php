@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Department;
 use App\Models\Faculty;
+use App\Models\Teacher;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -18,13 +19,18 @@ class DepartmentController extends Controller
         $departments = Department::whereHas('faculty', function ($query) {
             $query->where('user_id', Auth::id());
         })
-            ->with('faculty')
+            ->with(['faculty', 'chairman'])
             ->latest()
             ->get();
+
+        $teachers = Teacher::whereHas('department.faculty', function ($q) {
+            $q->where('user_id', Auth::id());
+        })->get();
 
         return inertia('Department/index', [
             'departments' => $departments,
             'faculties' => $faculties,
+            'teachers' => $teachers,
         ]);
     }
 
@@ -59,6 +65,7 @@ class DepartmentController extends Controller
                 'exists:faculties,id',
                 Rule::exists('faculties', 'id')->where('user_id', Auth::id()),
             ],
+            'chairman_id' => 'nullable|exists:teachers,id',
         ]);
 
         $department->update($validated);

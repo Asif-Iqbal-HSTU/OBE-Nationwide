@@ -1,45 +1,32 @@
-import React, { useState } from "react";
-import { Head, useForm, router } from "@inertiajs/react";
-import AppLayout from "@/layouts/app-layout";
-import type { BreadcrumbItem } from "@/types";
-// import { route } from 'ziggy-js';
-// import route from "ziggy-js";
-import { Pencil, Trash2 } from "lucide-react";
+import AppLayout from '@/layouts/app-layout';
+import type { BreadcrumbItem } from '@/types';
+import { Head, router, useForm } from '@inertiajs/react';
+import { Pencil, Target, Trash2 } from 'lucide-react';
+import React from 'react';
 
 export default function Index({ umissions }: any) {
     const breadcrumbs: BreadcrumbItem[] = [
-        { title: "University Missions", href: "/umissions" },
+        { title: 'University Missions', href: '/umissions' },
     ];
-
-    /* ---------------- FORM ---------------- */
-    /*const { data, setData, post, processing, reset, errors } = useForm({
-        umission_no: "",
-        umission_name: "",
-    });*/
 
     const { data, setData, post, put, processing, reset, errors } = useForm({
         id: null as number | null,
-        umission_no: "",
-        umission_name: "",
+        umission_no: '',
+        umission_name: '',
     });
 
     const isEditing = data.id !== null;
-
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
         if (isEditing) {
-            put(route("umissions.update", data.id), {
-                onSuccess: () => {
-                    reset();
-                },
+            put(route('umissions.update', data.id), {
+                onSuccess: () => reset(),
             });
         } else {
-            post(route("umissions.store"), {
-                onSuccess: () => {
-                    reset();
-                },
+            post(route('umissions.store'), {
+                onSuccess: () => reset(),
             });
         }
     };
@@ -53,17 +40,14 @@ export default function Index({ umissions }: any) {
     };
 
     const handleDelete = (id: number) => {
-        if (confirm("Are you sure you want to delete this umission?")) {
-            router.delete(route("umissions.destroy", id), {
+        if (confirm('Are you sure you want to delete this mission?')) {
+            router.delete(route('umissions.destroy', id), {
                 onSuccess: () => {
-                    if (data.id === id) {
-                        reset();
-                    }
+                    if (data.id === id) reset();
                 },
             });
         }
     };
-
 
     const sortedUmissions = [...umissions].sort(
         (a: any, b: any) => Number(a.umission_no) - Number(b.umission_no)
@@ -74,131 +58,120 @@ export default function Index({ umissions }: any) {
             <Head title="University Missions" />
 
             <div className="p-6">
-                <h1 className="text-xl font-bold mb-6">University Missions</h1>
+                <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+                    {/* Form Section */}
+                    <div className="h-fit rounded-2xl border bg-card p-6 shadow-sm">
+                        <h2 className="mb-6 flex items-center gap-2 text-xl font-bold">
+                            <Target className="h-5 w-5 text-blue-600" />
+                            {isEditing ? 'Edit Mission' : 'Add New Mission'}
+                        </h2>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* -------------------- Form Section -------------------- */}
-                    <div className="block rounded-2xl border bg-card p-6 shadow-sm hover:shadow-md transition">
-                        <h1 className="text-xl font-bold mb-6">
-                            Add New Umission
-                        </h1>
-
-                        <form onSubmit={handleSubmit} className="space-y-4">
-                            <div>
-                                <label className="block font-medium">
-                                    Umission No
+                        <form onSubmit={handleSubmit} className="space-y-5">
+                            <div className="space-y-1">
+                                <label className="text-xs font-semibold uppercase text-muted-foreground">
+                                    Mission Number
                                 </label>
                                 <input
                                     type="number"
-                                    className="w-full border rounded-lg p-2"
+                                    className="w-full rounded-lg border bg-background p-2 outline-none focus:ring-2 focus:ring-blue-500"
                                     value={data.umission_no}
-                                    onChange={(e) =>
-                                        setData("umission_no", e.target.value)
-                                    }
+                                    onChange={(e) => setData('umission_no', e.target.value)}
+                                    placeholder="1"
                                 />
                                 {errors.umission_no && (
-                                    <p className="text-red-500 text-sm">
-                                        {errors.umission_no}
-                                    </p>
+                                    <p className="text-[10px] text-red-500">{errors.umission_no}</p>
                                 )}
                             </div>
 
-                            <div>
-                                <label className="block font-medium">
-                                    Umission Name
+                            <div className="space-y-1">
+                                <label className="text-xs font-semibold uppercase text-muted-foreground">
+                                    Mission Statement
                                 </label>
                                 <textarea
-                                    className="w-full border rounded-lg p-2"
-                                    rows={4}
+                                    className="min-h-[120px] w-full rounded-lg border bg-background p-2 outline-none focus:ring-2 focus:ring-blue-500"
                                     value={data.umission_name}
-                                    onChange={(e) =>
-                                        setData(
-                                            "umission_name",
-                                            e.target.value
-                                        )
-                                    }
+                                    onChange={(e) => setData('umission_name', e.target.value)}
+                                    placeholder="Enter the mission statement..."
                                 />
                                 {errors.umission_name && (
-                                    <p className="text-red-500 text-sm">
-                                        {errors.umission_name}
-                                    </p>
+                                    <p className="text-[10px] text-red-500">{errors.umission_name}</p>
                                 )}
                             </div>
 
-                            <button
-                                type="submit"
-                                disabled={processing}
-                                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-60"
-                            >
-                                {processing
-                                    ? "Saving..."
-                                    : isEditing
-                                        ? "Update Umission"
-                                        : "Submit Umission"}
-
-                            </button>
-
-                            {isEditing && (
+                            <div className="flex flex-col gap-2 pt-2">
                                 <button
-                                    type="button"
-                                    onClick={() => reset()}
-                                    className="ml-2 px-4 py-2 border rounded-lg"
+                                    type="submit"
+                                    disabled={processing}
+                                    className="w-full rounded-lg bg-blue-600 py-2.5 font-bold text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
                                 >
-                                    Cancel Edit
+                                    {isEditing ? 'Update Mission' : 'Create Mission'}
                                 </button>
-                            )}
+                                {isEditing && (
+                                    <button
+                                        type="button"
+                                        onClick={() => reset()}
+                                        className="w-full text-sm text-muted-foreground hover:underline"
+                                    >
+                                        Cancel Editing
+                                    </button>
+                                )}
+                            </div>
                         </form>
                     </div>
 
-                    {/* -------------------- List Section -------------------- */}
-                    <div className="block rounded-2xl border bg-card p-6 shadow-sm hover:shadow-md transition flex flex-col">
-                        <h1 className="text-xl font-bold mb-4">
-                            Uploaded Umissions
-                        </h1>
+                    {/* List Section */}
+                    <div className="space-y-4 lg:col-span-2">
+                        <div className="flex items-center justify-between px-2">
+                            <h2 className="text-xl font-bold">University Missions</h2>
+                            <span className="rounded-full bg-blue-100 px-2 py-1 text-xs font-bold text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+                                {umissions.length} Missions Total
+                            </span>
+                        </div>
 
                         {umissions.length === 0 ? (
-                            <p className="text-gray-500">
-                                No umissions found.
-                            </p>
+                            <div className="rounded-xl border bg-card p-8 text-center">
+                                <Target className="mx-auto h-12 w-12 text-muted-foreground/30" />
+                                <p className="mt-4 text-muted-foreground">
+                                    No missions found. Add your first university mission.
+                                </p>
+                            </div>
                         ) : (
-                            <div className="space-y-4 overflow-y-auto max-h-[450px] pr-2">
-                                <ol className="list-decimal pl-5 space-y-3">
-                                    {sortedUmissions.map((u: any) => (
-                                        <li key={u.id} className="border-b pb-3 flex justify-between gap-4">
-                                            <div>
-                                                <div className="font-medium">#{u.umission_no}</div>
-                                                <div className="text-sm text-gray-700">
-                                                    {u.umission_name}
+                            <div className="space-y-3">
+                                {sortedUmissions.map((u: any) => (
+                                    <div
+                                        key={u.id}
+                                        className="group overflow-hidden rounded-xl border bg-card shadow-sm transition-shadow hover:shadow-md"
+                                    >
+                                        <div className="flex items-start justify-between gap-4 p-4">
+                                            <div className="flex items-start gap-4">
+                                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-100 text-sm font-bold text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+                                                    {u.umission_no}
+                                                </div>
+                                                <div className="pt-1">
+                                                    <p className="text-sm leading-relaxed text-foreground">
+                                                        {u.umission_name}
+                                                    </p>
                                                 </div>
                                             </div>
-
-                                            <div className="flex gap-2">
+                                            <div className="flex shrink-0 items-center gap-2 opacity-0 transition-opacity group-hover:opacity-100">
                                                 <button
-                                                    type="button"
                                                     onClick={() => handleEdit(u)}
-                                                    className="text-blue-600 hover:text-blue-800 transition"
-                                                    title="Edit"
+                                                    className="rounded-full p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30"
                                                 >
-                                                    <Pencil size={18} />
+                                                    <Pencil size={16} />
                                                 </button>
                                                 <button
-                                                    type="button"
                                                     onClick={() => handleDelete(u.id)}
-                                                    className="text-red-600 hover:text-red-800 transition"
-                                                    title="Delete"
+                                                    className="rounded-full p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30"
                                                 >
-                                                    <Trash2 size={18} />
+                                                    <Trash2 size={16} />
                                                 </button>
                                             </div>
-                                        </li>
-                                    ))}
-                                </ol>
-
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
                         )}
-
-
-
                     </div>
                 </div>
             </div>

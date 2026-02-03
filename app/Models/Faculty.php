@@ -8,7 +8,12 @@ use Illuminate\Database\Eloquent\Model;
 class Faculty extends Model
 {
     use HasFactory;
-    protected $guarded = ['created_at','updated_at'];
+    protected $guarded = ['created_at', 'updated_at'];
+
+    public function dean(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(Teacher::class, 'dean_id');
+    }
 
     public function user(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {

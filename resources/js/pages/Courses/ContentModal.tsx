@@ -37,7 +37,7 @@ export default function ContentModal({
     isOpen,
     onClose,
 }: any) {
-    const { data, setData, post, put, reset, processing } = useForm({
+    const { data, setData, post, put, transform, reset, processing, errors } = useForm({
         id: null as number | null,
         content_no: '',
         content: '',
@@ -57,37 +57,39 @@ export default function ContentModal({
         if (content && isOpen) {
             const teachingArr = content.teaching_strategy
                 ? content.teaching_strategy
-                      .split(',')
-                      .map((s: string) => s.trim())
+                    .split(',')
+                    .map((s: string) => s.trim())
                 : [];
 
             const assessmentArr = content.assessment_strategy
                 ? content.assessment_strategy
-                      .split(',')
-                      .map((s: string) => s.trim())
+                    .split(',')
+                    .map((s: string) => s.trim())
                 : [];
 
-            setTeachingSelected(
-                teachingArr.filter((t: string) => TEACHING_OPTIONS.includes(t)),
-            );
+            const baseTeaching = teachingArr.filter((t: string) => TEACHING_OPTIONS.includes(t));
+            const baseAssessment = assessmentArr.filter((a: string) => ASSESSMENT_OPTIONS.includes(a));
 
-            setAssessmentSelected(
-                assessmentArr.filter((a: string) =>
-                    ASSESSMENT_OPTIONS.includes(a),
-                ),
-            );
+            setTeachingSelected(baseTeaching);
+            setAssessmentSelected(baseAssessment);
 
-            setTeachingOther(
-                teachingArr
-                    .filter((t: string) => !TEACHING_OPTIONS.includes(t))
-                    .join(', '),
-            );
+            const tOther = teachingArr
+                .filter((t: string) => !TEACHING_OPTIONS.includes(t))
+                .join(', ');
 
-            setAssessmentOther(
-                assessmentArr
-                    .filter((a: string) => !ASSESSMENT_OPTIONS.includes(a))
-                    .join(', '),
-            );
+            const aOther = assessmentArr
+                .filter((a: string) => !ASSESSMENT_OPTIONS.includes(a))
+                .join(', ');
+
+            if (tOther) {
+                setTeachingSelected(prev => [...prev, 'Others']);
+                setTeachingOther(tOther);
+            }
+
+            if (aOther) {
+                setAssessmentSelected(prev => [...prev, 'Others']);
+                setAssessmentOther(aOther);
+            }
 
             setData({
                 id: content.id,
@@ -123,7 +125,7 @@ export default function ContentModal({
         );
     };
 
-    // Build comma-separated values before submit
+    // Build comma-separated values
     const buildStrategies = () => {
         const teaching = [
             ...teachingSelected.filter((v) => v !== 'Others'),
@@ -139,15 +141,20 @@ export default function ContentModal({
                 : []),
         ].join(', ');
 
-        setData('teaching_strategy', teaching);
-        setData('assessment_strategy', assessment);
+        return { teaching, assessment };
     };
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!program || !course) return;
 
-        buildStrategies();
+        const { teaching, assessment } = buildStrategies();
+
+        transform((data: any) => ({
+            ...data,
+            teaching_strategy: teaching,
+            assessment_strategy: assessment,
+        }));
 
         const url = data.id
             ? `/programs/${program.id}/courses/${course.id}/contents/${data.id}`
@@ -162,7 +169,7 @@ export default function ContentModal({
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="sm:max-w-[650px]">
+            <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[650px]">
                 <DialogHeader>
                     <DialogTitle>
                         {data.id ? 'Edit Content' : 'Add Content'}
@@ -172,7 +179,7 @@ export default function ContentModal({
                 <form
                     onSubmit={handleSubmit}
                     id="content-form"
-                    className="space-y-4 pt-4"
+                    className="space-y-6 pt-4"
                 >
                     <div className="grid grid-cols-4 gap-4">
                         <div className="col-span-1 space-y-2">
@@ -184,18 +191,20 @@ export default function ContentModal({
                                     setData('content_no', e.target.value)
                                 }
                             />
+                            {errors.content_no && <p className="text-xs text-red-500">{errors.content_no}</p>}
                         </div>
 
                         <div className="col-span-3 space-y-2">
-                            <Label>Map to CLOs</Label>
-                            <div className="grid max-h-[100px] grid-cols-3 gap-2 overflow-y-auto rounded border bg-slate-50 p-2">
+                            <Label className="font-bold text-slate-700">Map to CLOs</Label>
+                            <div className="grid max-h-[100px] grid-cols-3 gap-2 overflow-y-auto rounded-lg border bg-slate-50/50 p-2">
                                 {clos?.map((clo: any) => (
                                     <label
                                         key={clo.id}
-                                        className="flex items-center gap-2 text-xs"
+                                        className="flex cursor-pointer items-center gap-2 rounded p-1 text-xs hover:bg-white"
                                     >
                                         <input
                                             type="checkbox"
+                                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                                             checked={
                                                 data.clo_ids?.includes(
                                                     clo.id,
@@ -208,31 +217,32 @@ export default function ContentModal({
                                                     'clo_ids',
                                                     current.includes(clo.id)
                                                         ? current.filter(
-                                                              (id) =>
-                                                                  id !== clo.id,
-                                                          )
+                                                            (id) =>
+                                                                id !== clo.id,
+                                                        )
                                                         : [...current, clo.id],
                                                 );
                                             }}
                                         />
-                                        CLO {clo.clo_no}
+                                        <span className="font-bold text-blue-600">CLO {clo.clo_no}</span>
                                     </label>
                                 ))}
                             </div>
+                            {errors.clo_ids && <p className="text-xs text-red-500">{errors.clo_ids}</p>}
                         </div>
                     </div>
 
-                    {/* Teaching Strategy */}
-                    <div className="space-y-2">
-                        <Label>Teaching Strategy</Label>
-                        <div className="grid grid-cols-2 gap-2 text-sm">
+                    <div className="space-y-3 rounded-lg border bg-slate-50/50 p-4">
+                        <Label className="text-blue-700 font-bold">Teaching Strategy</Label>
+                        <div className="grid grid-cols-2 gap-2 text-sm sm:grid-cols-3">
                             {TEACHING_OPTIONS.map((opt) => (
                                 <label
                                     key={opt}
-                                    className="flex items-center gap-2"
+                                    className="flex cursor-pointer items-center gap-2 hover:text-blue-600 transition-colors"
                                 >
                                     <input
                                         type="checkbox"
+                                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                                         checked={teachingSelected.includes(opt)}
                                         onChange={() => toggleTeaching(opt)}
                                     />
@@ -244,25 +254,27 @@ export default function ContentModal({
                         {teachingSelected.includes('Others') && (
                             <Input
                                 placeholder="Enter other strategies separated by comma"
+                                className="mt-2"
                                 value={teachingOther}
                                 onChange={(e) =>
                                     setTeachingOther(e.target.value)
                                 }
                             />
                         )}
+                        {errors.teaching_strategy && <p className="text-xs text-red-500">{errors.teaching_strategy}</p>}
                     </div>
 
-                    {/* Assessment Strategy */}
-                    <div className="space-y-2">
-                        <Label>Assessment Strategy</Label>
-                        <div className="grid grid-cols-2 gap-2 text-sm">
+                    <div className="space-y-3 rounded-lg border bg-slate-50/50 p-4">
+                        <Label className="text-blue-700 font-bold">Assessment Strategy</Label>
+                        <div className="grid grid-cols-2 gap-2 text-sm sm:grid-cols-3">
                             {ASSESSMENT_OPTIONS.map((opt) => (
                                 <label
                                     key={opt}
-                                    className="flex items-center gap-2"
+                                    className="flex cursor-pointer items-center gap-2 hover:text-blue-600 transition-colors"
                                 >
                                     <input
                                         type="checkbox"
+                                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                                         checked={assessmentSelected.includes(
                                             opt,
                                         )}
@@ -276,24 +288,29 @@ export default function ContentModal({
                         {assessmentSelected.includes('Others') && (
                             <Input
                                 placeholder="Enter other assessments separated by comma"
+                                className="mt-2"
                                 value={assessmentOther}
                                 onChange={(e) =>
                                     setAssessmentOther(e.target.value)
                                 }
                             />
                         )}
+                        {errors.assessment_strategy && <p className="text-xs text-red-500">{errors.assessment_strategy}</p>}
                     </div>
 
                     <div className="space-y-2">
-                        <Label>Content Description</Label>
+                        <Label className="font-bold text-slate-700">Content Description</Label>
                         <Textarea
+                            placeholder="Enter description of the course content..."
                             value={data.content}
                             onChange={(e) => setData('content', e.target.value)}
+                            className="min-h-[100px]"
                         />
+                        {errors.content && <p className="text-xs text-red-500">{errors.content}</p>}
                     </div>
                 </form>
 
-                <DialogFooter>
+                <DialogFooter className="border-t pt-4">
                     <Button variant="outline" onClick={onClose}>
                         Cancel
                     </Button>
@@ -301,6 +318,7 @@ export default function ContentModal({
                         type="submit"
                         form="content-form"
                         disabled={processing}
+                        className="bg-blue-600 hover:bg-blue-700"
                     >
                         Save Content
                     </Button>
@@ -309,3 +327,4 @@ export default function ContentModal({
         </Dialog>
     );
 }
+

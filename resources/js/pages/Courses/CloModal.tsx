@@ -29,16 +29,24 @@ export default function CloModal({
     console.log(plos);
 
     useEffect(() => {
-        if (clo) {
-            setData({
-                id: clo.id,
-                clo_no: clo.clo_no || '',
-                clo_desc: clo.clo_desc || '',
-                // Extract IDs from the loaded relationship
-                plo_ids: clo.plos ? clo.plos.map((p: any) => p.id) : [],
-            });
-        } else {
-            reset();
+        if (isOpen) {
+            if (clo) {
+                setData({
+                    id: clo.id,
+                    clo_no: clo.clo_no || '',
+                    clo_desc: clo.clo_desc || '',
+                    // Extract IDs from the loaded relationship
+                    plo_ids: clo.plos ? clo.plos.map((p: any) => p.id) : [],
+                });
+            } else {
+                // Explicitly reset to initial values for new CLO
+                setData({
+                    id: null,
+                    clo_no: '',
+                    clo_desc: '',
+                    plo_ids: [],
+                });
+            }
         }
     }, [clo, isOpen]);
 

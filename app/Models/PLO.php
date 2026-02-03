@@ -21,4 +21,9 @@ class PLO extends Model
     {
         return $this->belongsToMany(CLO::class, 'clo_plo', 'plo_id', 'clo_id');
     }
+
+    public function peos(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(PEO::class, 'peo_plo', 'plo_id', 'peo_id');
+    }
 }

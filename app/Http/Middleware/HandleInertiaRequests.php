@@ -43,18 +43,73 @@ class HandleInertiaRequests extends Middleware
             ...parent::share($request),
             'name' => config('app.name'),
             'quote' => ['message' => trim($message), 'author' => trim($author)],
-            'auth' => [
-                'user' => $request->user(),
-            ],
-            'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
-            'userPrograms' => fn () => $request->user()
-                ? Program::whereHas('faculty', function ($query) use ($request) {
-                    $query->where('user_id', $request->user()->id);
+            'sidebarOpen' => !$request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
+            'userPrograms' => function () use ($request) {
+                $user = $request->user();
+                if (!$user)
+                    return ['teaching' => [], 'managed' => []];
+
+                if ($user->isAdmin()) {
+                    $managed = Program::whereHas('faculty', function ($query) use ($user) {
+                        $query->where('user_id', $user->id);
+                    })
+                        ->select('id', 'name', 'short_name')
+                        ->orderBy('name')
+                        ->get();
+                    return ['teaching' => [], 'managed' => $managed];
+                }
+
+                $teacher = $user->teacher;
+                if (!$teacher)
+                    return ['teaching' => [], 'managed' => []];
+
+                $teaching = Program::whereHas('courses.assignments', function ($sq) use ($teacher) {
+                    $sq->where('teacher_id', $teacher->id);
                 })
                     ->select('id', 'name', 'short_name')
+                    ->distinct()
                     ->orderBy('name')
-                    ->get()
-                : [],
+                    ->get();
+
+                $myCourses = \App\Models\Course::whereHas('assignments', function ($q) use ($teacher) {
+                    $q->where('teacher_id', $teacher->id);
+                })
+                    ->with('program:id,name,short_name')
+                    ->select('id', 'program_id', 'code', 'name')
+                    ->orderBy('code')
+                    ->get();
+
+                $managed = [];
+                $isChairman = \App\Models\Department::where('chairman_id', $teacher->id)->exists();
+                $isDean = \App\Models\Faculty::where('dean_id', $teacher->id)->exists();
+
+                if ($isChairman || $isDean) {
+                    $managed = Program::whereIn('department_id', \App\Models\Department::where('chairman_id', $teacher->id)->pluck('id'))
+                        ->orWhereIn('faculty_id', \App\Models\Faculty::where('dean_id', $teacher->id)->pluck('id'))
+                        ->select('id', 'name', 'short_name')
+                        ->distinct()
+                        ->orderBy('name')
+                        ->get();
+                }
+
+                return [
+                    'teaching' => $teaching,
+                    'myCourses' => $myCourses,
+                    'managed' => $managed
+                ];
+            },
+            'auth' => [
+                'user' => $request->user(),
+                'teacher' => $request->user() && $request->user()->teacher
+                    ? $request->user()->teacher->load(['department.faculty'])
+                    : null,
+                'isChairman' => $request->user() && $request->user()->teacher
+                    ? \App\Models\Department::where('chairman_id', $request->user()->teacher->id)->exists()
+                    : false,
+                'isDean' => $request->user() && $request->user()->teacher
+                    ? \App\Models\Faculty::where('dean_id', $request->user()->teacher->id)->exists()
+                    : false,
+            ],
         ];
     }
 }

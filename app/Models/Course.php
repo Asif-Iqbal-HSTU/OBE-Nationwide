@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class Course extends Model
 {
     use HasFactory;
-    protected $guarded = ['created_at','updated_at'];
+    protected $guarded = ['created_at', 'updated_at'];
 
     public function program(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
@@ -33,5 +33,22 @@ class Course extends Model
     public function books(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(Book::class);
+    }
+
+    public function assignments(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(CourseAssignment::class);
+    }
+
+    public function teachers(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(Teacher::class, 'course_assignments', 'course_id', 'teacher_id')
+            ->withPivot(['session', 'semester', 'assigned_by'])
+            ->withTimestamps();
+    }
+
+    public function lessonPlans(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(LessonPlan::class);
     }
 }

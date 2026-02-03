@@ -1,13 +1,13 @@
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 import { Head, router, useForm } from '@inertiajs/react';
-import { Pencil, Trash2 } from 'lucide-react';
+import { Lightbulb, Pencil, Trash2 } from 'lucide-react';
 import React from 'react';
 
 export default function Index({ program, genericSkills }: any) {
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Programs', href: '/programs' },
-        { title: program.name, href: `/programs/${program.id}` },
+        { title: program.short_name || program.name, href: `/programs/${program.id}` },
         { title: 'Generic Skills', href: `/programs/${program.id}/generic-skills` },
     ];
 
@@ -57,113 +57,126 @@ export default function Index({ program, genericSkills }: any) {
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title={`Generic Skills - ${program.name}`} />
+            <Head title={`Generic Skills - ${program.short_name || program.name}`} />
 
             <div className="p-6">
-                <div className="mb-6">
-                    <h1 className="text-2xl font-bold">Generic Skills</h1>
-                    <p className="text-sm text-muted-foreground">
-                        {program.name} ({program.short_name})
-                    </p>
-                </div>
-
-                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
                     {/* Form Section */}
-                    <div className="block rounded-2xl border bg-card p-6 shadow-sm transition hover:shadow-md">
-                        <h2 className="mb-6 text-xl font-bold">
+                    <div className="h-fit rounded-2xl border bg-card p-6 shadow-sm">
+                        <h2 className="mb-6 flex items-center gap-2 text-xl font-bold">
+                            <Lightbulb className="h-5 w-5 text-amber-600" />
                             {isEditing ? 'Edit Generic Skill' : 'Add New Generic Skill'}
                         </h2>
 
-                        <form onSubmit={handleSubmit} className="space-y-4">
-                            <div>
-                                <label className="block font-medium">Skill No.</label>
+                        <form onSubmit={handleSubmit} className="space-y-5">
+                            <div className="space-y-1">
+                                <label className="text-xs font-semibold uppercase text-muted-foreground">
+                                    Skill Number
+                                </label>
                                 <input
                                     type="number"
-                                    className="w-full rounded-lg border p-2"
+                                    className="w-full rounded-lg border bg-background p-2 outline-none focus:ring-2 focus:ring-amber-500"
                                     value={data.skill_no}
                                     onChange={(e) => setData('skill_no', e.target.value)}
+                                    placeholder="1"
                                 />
                                 {errors.skill_no && (
-                                    <p className="text-sm text-red-500">{errors.skill_no}</p>
+                                    <p className="text-[10px] text-red-500">{errors.skill_no}</p>
                                 )}
                             </div>
 
-                            <div>
-                                <label className="block font-medium">Skill Name</label>
+                            <div className="space-y-1">
+                                <label className="text-xs font-semibold uppercase text-muted-foreground">
+                                    Skill Name
+                                </label>
                                 <textarea
-                                    className="w-full rounded-lg border p-2"
-                                    rows={3}
+                                    className="min-h-[100px] w-full rounded-lg border bg-background p-2 outline-none focus:ring-2 focus:ring-amber-500"
                                     value={data.skill_name}
                                     onChange={(e) => setData('skill_name', e.target.value)}
+                                    placeholder="Describe the generic skill..."
                                 />
                                 {errors.skill_name && (
-                                    <p className="text-sm text-red-500">{errors.skill_name}</p>
+                                    <p className="text-[10px] text-red-500">{errors.skill_name}</p>
                                 )}
                             </div>
 
-                            <button
-                                type="submit"
-                                disabled={processing}
-                                className="rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-60"
-                            >
-                                {processing
-                                    ? 'Saving...'
-                                    : isEditing
-                                      ? 'Update Skill'
-                                      : 'Create Skill'}
-                            </button>
-
-                            {isEditing && (
+                            <div className="flex flex-col gap-2 pt-2">
                                 <button
-                                    type="button"
-                                    onClick={() => reset()}
-                                    className="ml-2 rounded-lg border px-4 py-2"
+                                    type="submit"
+                                    disabled={processing}
+                                    className="w-full rounded-lg bg-amber-600 py-2.5 font-bold text-white transition-colors hover:bg-amber-700 disabled:opacity-50"
                                 >
-                                    Cancel Edit
+                                    {isEditing ? 'Update Skill' : 'Create Skill'}
                                 </button>
-                            )}
+                                {isEditing && (
+                                    <button
+                                        type="button"
+                                        onClick={() => reset()}
+                                        className="w-full text-sm text-muted-foreground hover:underline"
+                                    >
+                                        Cancel Editing
+                                    </button>
+                                )}
+                            </div>
                         </form>
                     </div>
 
                     {/* List Section */}
-                    <div className="block flex flex-col rounded-2xl border bg-card p-6 shadow-sm transition hover:shadow-md">
-                        <h2 className="mb-4 text-xl font-bold">All Generic Skills</h2>
+                    <div className="space-y-4 lg:col-span-2">
+                        <div className="flex items-center justify-between px-2">
+                            <div>
+                                <h2 className="text-xl font-bold">Generic Skills</h2>
+                                <p className="text-sm text-muted-foreground">
+                                    {program.short_name || program.name}
+                                </p>
+                            </div>
+                            <span className="rounded-full bg-amber-100 px-2 py-1 text-xs font-bold text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">
+                                {genericSkills.length} Skills Total
+                            </span>
+                        </div>
 
                         {genericSkills.length === 0 ? (
-                            <p className="text-gray-500">No generic skills found.</p>
+                            <div className="rounded-xl border bg-card p-8 text-center">
+                                <Lightbulb className="mx-auto h-12 w-12 text-muted-foreground/30" />
+                                <p className="mt-4 text-muted-foreground">
+                                    No generic skills found. Add your first generic skill.
+                                </p>
+                            </div>
                         ) : (
-                            <div className="max-h-[450px] space-y-4 overflow-y-auto pr-2">
+                            <div className="space-y-3">
                                 {sortedSkills.map((skill: any) => (
                                     <div
                                         key={skill.id}
-                                        className="flex items-start justify-between gap-4 border-b pb-3"
+                                        className="group overflow-hidden rounded-xl border bg-card shadow-sm transition-shadow hover:shadow-md"
                                     >
-                                        <div>
-                                            <div className="font-medium">
-                                                Skill {skill.skill_no}
+                                        <div className="flex items-start justify-between gap-4 p-4">
+                                            <div className="flex items-start gap-4">
+                                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-sm font-bold text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">
+                                                    {skill.skill_no}
+                                                </div>
+                                                <div className="pt-1">
+                                                    <span className="text-[10px] font-semibold uppercase tracking-wider text-amber-600 dark:text-amber-400">
+                                                        Skill {skill.skill_no}
+                                                    </span>
+                                                    <p className="mt-1 text-sm leading-relaxed text-foreground">
+                                                        {skill.skill_name}
+                                                    </p>
+                                                </div>
                                             </div>
-                                            <div className="text-sm text-gray-700">
-                                                {skill.skill_name}
+                                            <div className="flex shrink-0 items-center gap-2 opacity-0 transition-opacity group-hover:opacity-100">
+                                                <button
+                                                    onClick={() => handleEdit(skill)}
+                                                    className="rounded-full p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30"
+                                                >
+                                                    <Pencil size={16} />
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDelete(skill.id)}
+                                                    className="rounded-full p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30"
+                                                >
+                                                    <Trash2 size={16} />
+                                                </button>
                                             </div>
-                                        </div>
-
-                                        <div className="flex gap-2">
-                                            <button
-                                                type="button"
-                                                onClick={() => handleEdit(skill)}
-                                                className="text-blue-600 transition hover:text-blue-800"
-                                                title="Edit"
-                                            >
-                                                <Pencil size={18} />
-                                            </button>
-                                            <button
-                                                type="button"
-                                                onClick={() => handleDelete(skill.id)}
-                                                className="text-red-600 transition hover:text-red-800"
-                                                title="Delete"
-                                            >
-                                                <Trash2 size={18} />
-                                            </button>
                                         </div>
                                     </div>
                                 ))}

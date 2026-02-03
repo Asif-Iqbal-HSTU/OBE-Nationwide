@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\PEO;
 use App\Models\PLO;
 use App\Models\Program;
 use Illuminate\Http\RedirectResponse;
@@ -17,12 +18,16 @@ class PLOController extends Controller
         }
 
         $plos = PLO::where('program_id', $program->id)
+            ->with('peos')
             ->orderBy('plo_no')
             ->get();
+
+        $peos = PEO::where('program_id', $program->id)->orderBy('peo_no')->get();
 
         return inertia('PLO/index', [
             'program' => $program->load(['faculty', 'department']),
             'plos' => $plos,
+            'peos' => $peos,
         ]);
     }
 
@@ -35,13 +40,19 @@ class PLOController extends Controller
         $validated = $request->validate([
             'plo_no' => 'required|integer',
             'plo_desc' => 'required|string',
+            'peo_ids' => 'nullable|array',
+            'peo_ids.*' => 'exists:p_e_o_s,id',
         ]);
 
-        PLO::create([
+        $plo = PLO::create([
             'program_id' => $program->id,
             'plo_no' => $validated['plo_no'],
             'plo_desc' => $validated['plo_desc'],
         ]);
+
+        if (isset($validated['peo_ids'])) {
+            $plo->peos()->sync($validated['peo_ids']);
+        }
 
         return redirect()->back()->with('success', 'PLO created successfully');
     }
@@ -55,9 +66,18 @@ class PLOController extends Controller
         $validated = $request->validate([
             'plo_no' => 'required|integer',
             'plo_desc' => 'required|string',
+            'peo_ids' => 'nullable|array',
+            'peo_ids.*' => 'exists:p_e_o_s,id',
         ]);
 
-        $plo->update($validated);
+        $plo->update([
+            'plo_no' => $validated['plo_no'],
+            'plo_desc' => $validated['plo_desc'],
+        ]);
+
+        if (isset($validated['peo_ids'])) {
+            $plo->peos()->sync($validated['peo_ids']);
+        }
 
         return redirect()->back()->with('success', 'PLO updated successfully');
     }
