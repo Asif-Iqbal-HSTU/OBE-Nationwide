@@ -29,6 +29,52 @@ class HandleInertiaRequests extends Middleware
     }
 
     /**
+     * Get student statistics for dashboard display
+     */
+    private function getStudentStats(Request $request): ?array
+    {
+        $user = $request->user();
+        if (!$user || !$user->student) {
+            return null;
+        }
+
+        $student = $user->student;
+
+        // Fetch courses for this student
+        $courses = \App\Models\Course::where('program_id', $student->program_id)
+            ->where('semester', $student->current_semester)
+            ->where('session', $student->session)
+            ->get();
+
+        $courseIds = $courses->pluck('id');
+
+        // Count pending assignments
+        $pendingAssignments = \App\Models\Assignment::whereIn('course_id', $courseIds)
+            ->where('due_date', '>=', now())
+            ->whereDoesntHave('submissions', function ($q) use ($student) {
+                $q->where('student_id', $student->id);
+            })
+            ->count();
+
+        // Get attendance stats
+        $attendanceRecords = \App\Models\Attendance::whereIn('course_id', $courseIds)
+            ->where('student_id', $student->id)
+            ->get();
+
+        $totalClasses = $attendanceRecords->count();
+        $presentClasses = $attendanceRecords->where('status', 'present')->count();
+        $attendancePercentage = $totalClasses > 0 ? round(($presentClasses / $totalClasses) * 100) : null;
+
+        return [
+            'enrolledCourses' => $courses->count(),
+            'pendingAssignments' => $pendingAssignments,
+            'attendancePercentage' => $attendancePercentage,
+            'totalClasses' => $totalClasses,
+            'presentClasses' => $presentClasses,
+        ];
+    }
+
+    /**
      * Define the props that are shared by default.
      *
      * @see https://inertiajs.com/shared-data
@@ -103,6 +149,10 @@ class HandleInertiaRequests extends Middleware
                 'teacher' => $request->user() && $request->user()->teacher
                     ? $request->user()->teacher->load(['department.faculty'])
                     : null,
+                'student' => $request->user() && $request->user()->student
+                    ? $request->user()->student->load(['program.department.faculty'])
+                    : null,
+                'studentStats' => $this->getStudentStats($request),
                 'isChairman' => $request->user() && $request->user()->teacher
                     ? \App\Models\Department::where('chairman_id', $request->user()->teacher->id)->exists()
                     : false,

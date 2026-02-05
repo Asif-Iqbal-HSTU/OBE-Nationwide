@@ -10,6 +10,7 @@ import { register } from '@/routes';
 import { store } from '@/routes/login';
 import { request } from '@/routes/password';
 import { Form, Head } from '@inertiajs/react';
+import { useState } from 'react';
 
 interface LoginProps {
     status?: string;
@@ -22,12 +23,38 @@ export default function Login({
     canResetPassword,
     canRegister,
 }: LoginProps) {
+    const [loginType, setLoginType] = useState<'email' | 'student_id'>('email');
+
     return (
         <AuthLayout
             title="Log in to your account"
-            description="Enter your email and password below to log in"
+            description="Enter your credentials below to log in"
         >
             <Head title="Log in" />
+
+            {/* Login Type Tabs */}
+            <div className="mb-6 flex rounded-xl bg-muted p-1">
+                <button
+                    type="button"
+                    onClick={() => setLoginType('email')}
+                    className={`flex-1 rounded-lg py-2.5 text-sm font-semibold transition-all ${loginType === 'email'
+                            ? 'bg-background text-foreground shadow-sm'
+                            : 'text-muted-foreground hover:text-foreground'
+                        }`}
+                >
+                    Email Login
+                </button>
+                <button
+                    type="button"
+                    onClick={() => setLoginType('student_id')}
+                    className={`flex-1 rounded-lg py-2.5 text-sm font-semibold transition-all ${loginType === 'student_id'
+                            ? 'bg-background text-foreground shadow-sm'
+                            : 'text-muted-foreground hover:text-foreground'
+                        }`}
+                >
+                    Student ID Login
+                </button>
+            </div>
 
             <Form
                 {...store.form()}
@@ -37,20 +64,40 @@ export default function Login({
                 {({ processing, errors }) => (
                     <>
                         <div className="grid gap-6">
-                            <div className="grid gap-2">
-                                <Label htmlFor="email">Email address</Label>
-                                <Input
-                                    id="email"
-                                    type="email"
-                                    name="email"
-                                    required
-                                    autoFocus
-                                    tabIndex={1}
-                                    autoComplete="email"
-                                    placeholder="email@example.com"
-                                />
-                                <InputError message={errors.email} />
-                            </div>
+                            {loginType === 'email' ? (
+                                <div className="grid gap-2">
+                                    <Label htmlFor="email">Email address</Label>
+                                    <Input
+                                        id="email"
+                                        type="email"
+                                        name="email"
+                                        required
+                                        autoFocus
+                                        tabIndex={1}
+                                        autoComplete="email"
+                                        placeholder="email@example.com"
+                                    />
+                                    <InputError message={errors.email} />
+                                </div>
+                            ) : (
+                                <div className="grid gap-2">
+                                    <Label htmlFor="student_id">Student ID</Label>
+                                    <Input
+                                        id="student_id"
+                                        type="text"
+                                        name="email"
+                                        required
+                                        autoFocus
+                                        tabIndex={1}
+                                        autoComplete="username"
+                                        placeholder="e.g. 2102001"
+                                    />
+                                    <p className="text-xs text-muted-foreground">
+                                        Students can login with their Student ID
+                                    </p>
+                                    <InputError message={errors.email} />
+                                </div>
+                            )}
 
                             <div className="grid gap-2">
                                 <div className="flex items-center">

@@ -43,4 +43,19 @@ class Teacher extends Model
         $faculty = Faculty::find($facultyId);
         return $faculty && $faculty->dean_id === $this->id;
     }
+
+    public function createdAssignments(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Assignment::class, 'teacher_id');
+    }
+
+    public function recordedAttendances(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Attendance::class, 'recorded_by');
+    }
+
+    public function answeredSupports(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Support::class, 'answered_by');
+    }
 }

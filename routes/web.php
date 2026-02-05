@@ -20,6 +20,15 @@ use App\Http\Controllers\MyCourseController;
 use App\Http\Controllers\TeacherController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+use App\Http\Controllers\Teacher\AssignmentController as TeacherAssignmentController;
+use App\Http\Controllers\Teacher\SubmissionController as TeacherSubmissionController;
+use App\Http\Controllers\Teacher\AttendanceController as TeacherAttendanceController;
+use App\Http\Controllers\Teacher\ExamMarkController as TeacherExamMarkController;
+use App\Http\Controllers\Teacher\SupportController as TeacherSupportController;
+use App\Http\Controllers\Student\DashboardController as StudentDashboardController;
+use App\Http\Controllers\Student\CourseController as StudentCourseController;
+use App\Http\Controllers\Student\AssignmentController as StudentAssignmentController;
+use App\Http\Controllers\Student\SupportController as StudentSupportController;
 use Laravel\Fortify\Features;
 
 Route::get('/', function () {
@@ -51,6 +60,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('/departments/{department}', [DepartmentController::class, 'destroy'])->name('departments.destroy');
 
     Route::get('/programs', [ProgramController::class, 'index'])->name('programs.index');
+    Route::get('/programs/{program}', [ProgramController::class, 'show'])->name('programs.show');
     Route::post('/programs', [ProgramController::class, 'store'])->name('programs.store');
     Route::put('/programs/{program}', [ProgramController::class, 'update'])->name('programs.update');
     Route::delete('/programs/{program}', [ProgramController::class, 'destroy'])->name('programs.destroy');
@@ -141,6 +151,43 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/my-courses/{assignment}', [MyCourseController::class, 'show'])->name('my-courses.show');
     Route::get('/my-courses/{assignment}/exam-questions/create', [MyCourseController::class, 'createExamQuestion'])->name('my-courses.exam-questions.create');
     Route::post('/my-courses/{assignment}/exam-questions', [MyCourseController::class, 'storeExamQuestion'])->name('my-courses.exam-questions.store');
+
+    // Teacher LMS Routes
+    Route::prefix('teacher')->name('teacher.')->group(function () {
+        // Assignments
+        Route::post('/courses/{course}/assignments', [TeacherAssignmentController::class, 'store'])->name('assignments.store');
+        Route::delete('/assignments/{assignment}', [TeacherAssignmentController::class, 'destroy'])->name('assignments.destroy');
+
+        // Submissions (Grading)
+        Route::put('/submissions/{submission}', [TeacherSubmissionController::class, 'update'])->name('submissions.update');
+
+        // Attendance
+        Route::post('/courses/{course}/attendance', [TeacherAttendanceController::class, 'store'])->name('attendance.store');
+
+        // Exam Marks
+        Route::post('/courses/{course}/exam-marks', [TeacherExamMarkController::class, 'store'])->name('exam-marks.store');
+
+        // Support
+        Route::put('/supports/{support}', [TeacherSupportController::class, 'update'])->name('supports.update');
+    });
+
+    // Student LMS Routes
+    Route::prefix('student')->name('student.')->group(function () {
+        Route::get('/dashboard', [StudentDashboardController::class, 'index'])->name('dashboard');
+        Route::get('/assignments', [StudentDashboardController::class, 'assignments'])->name('assignments');
+        Route::get('/attendance', [StudentDashboardController::class, 'attendance'])->name('attendance');
+        Route::get('/grades', [StudentDashboardController::class, 'grades'])->name('grades');
+        Route::get('/support', [StudentDashboardController::class, 'support'])->name('support');
+
+        Route::get('/courses/{course}', [StudentCourseController::class, 'show'])->name('courses.show');
+
+        // Assignments
+        Route::post('/assignments/{assignment}/submit', [StudentAssignmentController::class, 'submit'])->name('assignments.submit');
+
+        // Support
+        Route::post('/courses/{course}/support', [StudentSupportController::class, 'store'])->name('support.store');
+    });
 });
+
 
 require __DIR__ . '/settings.php';

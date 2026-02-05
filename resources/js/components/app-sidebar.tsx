@@ -24,14 +24,19 @@ import {
     Target,
     Trophy,
     Users,
+    Calendar,
+    FileText,
+    HelpCircle,
+    BarChart3,
 } from 'lucide-react';
 import AppLogo from './app-logo';
 
 export function AppSidebar() {
     const { userPrograms, auth } = usePage<SharedData>().props;
-    const { user, isChairman, isDean } = auth;
+    const { user, isChairman, isDean, student } = auth;
 
     const isAdmin = user.role === 'admin';
+    const isStudent = user.role === 'student';
 
     // Helper to build sub-items
     const buildProgramSubItems = (programs: any[]) =>
@@ -66,6 +71,59 @@ export function AppSidebar() {
     navGroups.push({
         items: [{ title: 'Dashboard', href: dashboard(), icon: LayoutGrid }],
     });
+
+    // === STUDENT NAVIGATION ===
+    if (isStudent && student) {
+        navGroups.push({
+            label: 'My Learning',
+            items: [
+                { title: 'My Courses', href: '/student/dashboard', icon: BookOpen },
+                { title: 'Assignments', href: '/student/assignments', icon: FileQuestion },
+                { title: 'Attendance', href: '/student/attendance', icon: Calendar },
+            ],
+        });
+
+        navGroups.push({
+            label: 'Progress',
+            items: [
+                { title: 'My Grades', href: '/student/grades', icon: BarChart3 },
+                { title: 'CLO Attainment', href: '/student/grades', icon: Target },
+            ],
+        });
+
+        navGroups.push({
+            label: 'Support',
+            items: [
+                { title: 'Get Help', href: '/student/support', icon: HelpCircle },
+            ],
+        });
+
+        return (
+            <Sidebar collapsible="icon" variant="inset">
+                <SidebarHeader>
+                    <SidebarMenu>
+                        <SidebarMenuItem>
+                            <SidebarMenuButton size="lg" asChild>
+                                <Link href={dashboard()} prefetch>
+                                    <AppLogo />
+                                </Link>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+                    </SidebarMenu>
+                </SidebarHeader>
+
+                <SidebarContent>
+                    <NavMain groups={navGroups} />
+                </SidebarContent>
+
+                <SidebarFooter>
+                    <NavUser />
+                </SidebarFooter>
+            </Sidebar>
+        );
+    }
+
+    // === TEACHER/ADMIN NAVIGATION ===
 
     // 2. Foundation (Admin only)
     if (isAdmin) {

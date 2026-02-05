@@ -62,6 +62,10 @@ class MyCourseController extends Controller
             'lessonPlans.clos',
             'program.department',
             'program.plos',
+            'classAssignments.submissions',
+            'attendances.student',
+            'examMarks.student',
+            'supports.student',
         ])->findOrFail($assignment->course_id);
 
         // Get exam questions for this course by this teacher
@@ -71,12 +75,54 @@ class MyCourseController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
+        // Fetch Students enrolled in this program and semester
+        // Note: Assuming 'semester' in Course matches 'current_semester' in Student, or we use the assignment's semester if applicable.
+        // For now, let's assume students are mapped by Program ID and maybe Session/Semester.
+        // If CourseAssignment has 'semester' and 'session', we should use those.
+
+        $studentsQuery = \App\Models\Student::with('user')
+            ->where('program_id', $course->program_id);
+
+        // If assignment has specific semester/session, filter by it.
+        if ($assignment->semester) {
+            $studentsQuery->where('current_semester', $assignment->semester);
+        }
+
+        $students = $studentsQuery->get()->map(function ($student) use ($course) {
+            // Check attendance stats
+            $totalClasses = $course->attendances->where('student_id', $student->student_id)->count(); // This logic might be flawed if multiple dates.
+            // Better: Get unique dates of attendance for this course
+            $totalCourseClasses = \App\Models\Attendance::where('course_id', $course->id)->distinct('date')->count('date');
+
+            $presentCount = $course->attendances
+                ->where('student_id', $student->student_id)
+                ->where('status', 'present')
+                ->count();
+
+            $attendancePercentage = $totalCourseClasses > 0 ? ($presentCount / $totalCourseClasses) * 100 : 0;
+
+            // Average Marks
+            $totalMarksObtained = $course->examMarks->where('student_id', $student->student_id)->sum('marks');
+            $totalExamMarks = $course->examMarks->where('student_id', $student->student_id)->sum('total_marks');
+            $marksPercentage = $totalExamMarks > 0 ? ($totalMarksObtained / $totalExamMarks) * 100 : 0;
+
+            return [
+                'id' => $student->id,
+                'student_id' => $student->student_id,
+                'name' => $student->user->name,
+                'email' => $student->user->email,
+                'attendance_percentage' => round($attendancePercentage, 1),
+                'current_marks_percentage' => round($marksPercentage, 1),
+            ];
+        });
+
         return Inertia::render('MyCourse/Show', [
             'course' => $course,
             'program' => $course->program,
             'plos' => $course->program->plos,
             'examQuestions' => $examQuestions,
             'assignment' => $assignment,
+            'students' => $students,
         ]);
     }
 

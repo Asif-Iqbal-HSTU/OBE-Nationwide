@@ -51,4 +51,24 @@ class Course extends Model
     {
         return $this->hasMany(LessonPlan::class);
     }
+
+    public function classAssignments(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Assignment::class);
+    }
+
+    public function attendances(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Attendance::class);
+    }
+
+    public function examMarks(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(ExamMark::class);
+    }
+
+    public function supports(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Support::class);
+    }
 }

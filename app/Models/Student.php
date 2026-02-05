@@ -19,4 +19,24 @@ class Student extends Model
     {
         return $this->belongsTo(Program::class);
     }
+
+    public function submissions(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Submission::class);
+    }
+
+    public function attendances(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Attendance::class);
+    }
+
+    public function examMarks(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(ExamMark::class);
+    }
+
+    public function supports(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Support::class);
+    }
 }

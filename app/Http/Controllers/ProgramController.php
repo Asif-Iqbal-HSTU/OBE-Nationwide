@@ -12,6 +12,36 @@ use Illuminate\Validation\Rule;
 
 class ProgramController extends Controller
 {
+    /**
+     * Check if the current user can access a program.
+     * Allows: Faculty admin (user_id), Dean, Department Chairman
+     */
+    private function canAccessProgram(Program $program): bool
+    {
+        $user = Auth::user();
+        $teacher = $user->teacher;
+
+        // Faculty admin (owns the faculty)
+        if ($program->faculty->user_id === $user->id) {
+            return true;
+        }
+
+        // Teacher checks
+        if ($teacher) {
+            // Dean of the faculty
+            if ($program->faculty->dean_id === $teacher->id) {
+                return true;
+            }
+
+            // Chairman of the program's department
+            if ($program->department && $program->department->chairman_id === $teacher->id) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public function index()
     {
         $user = Auth::user();
@@ -51,6 +81,20 @@ class ProgramController extends Controller
         ]);
     }
 
+    public function show(Program $program)
+    {
+        if (!$this->canAccessProgram($program)) {
+            abort(403);
+        }
+
+        $program->load(['faculty', 'department']);
+        $program->loadCount(['peos', 'plos', 'courses', 'genericSkills']);
+
+        return inertia('Program/show', [
+            'program' => $program,
+        ]);
+    }
+
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
@@ -84,7 +128,7 @@ class ProgramController extends Controller
 
     public function update(Request $request, Program $program): RedirectResponse
     {
-        if ($program->faculty->user_id !== Auth::id()) {
+        if (!$this->canAccessProgram($program)) {
             abort(403);
         }
 
@@ -94,18 +138,10 @@ class ProgramController extends Controller
             'faculty_id' => [
                 'required',
                 'exists:faculties,id',
-                Rule::exists('faculties', 'id')->where('user_id', Auth::id()),
             ],
             'department_id' => [
                 'required',
                 'exists:departments,id',
-                Rule::exists('departments', 'id')->where(function ($query) {
-                    $query->whereIn('faculty_id', function ($sq) {
-                        $sq->select('id')
-                            ->from('faculties')
-                            ->where('user_id', Auth::id());
-                    });
-                }),
             ],
             'vision' => 'nullable|string',
             'mission' => 'nullable|string',
@@ -119,7 +155,7 @@ class ProgramController extends Controller
 
     public function destroy(Program $program): RedirectResponse
     {
-        if ($program->faculty->user_id !== Auth::id()) {
+        if (!$this->canAccessProgram($program)) {
             abort(403);
         }
 
@@ -128,3 +164,4 @@ class ProgramController extends Controller
         return redirect()->back()->with('success', 'Program deleted successfully');
     }
 }
+
