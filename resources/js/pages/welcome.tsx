@@ -25,7 +25,7 @@ export default function Welcome({
 
     return (
         <div className="min-h-screen hero-mesh selection:bg-indigo-100 selection:text-indigo-700 dark:selection:bg-indigo-900/40 dark:selection:text-indigo-200">
-            <Head title="OBE Nationwide - Integrated Teaching Learning System">
+            <Head title="Smart Campus HSTU - Integrated Teaching Learning System">
                 <link rel="preconnect" href="https://fonts.googleapis.com" />
                 <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
                 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
@@ -39,7 +39,7 @@ export default function Welcome({
                             <GraduationCap className="h-6 w-6 text-white" />
                         </div>
                         <span className="text-xl font-bold tracking-tight text-slate-900 dark:text-white font-['Outfit']">
-                            OBE<span className="text-blue-600 dark:text-blue-400">Nationwide</span>
+                            Smart<span className="text-blue-600 dark:text-blue-400"> Campus HSTU</span>
                         </span>
                     </div>
 
@@ -126,7 +126,7 @@ export default function Welcome({
                                 <div className="relative glass rounded-3xl p-2 transition-transform hover:scale-[1.02] duration-500 overflow-hidden shadow-2xl">
                                     <img
                                         src="/images/hero.png"
-                                        alt="OBE Dashboard Illustration"
+                                        alt="Smart Campus HSTU Dashboard Illustration"
                                         className="rounded-2xl border border-white/10 shadow-inner"
                                     />
                                 </div>
@@ -192,7 +192,7 @@ export default function Welcome({
                             </h2>
                             <p className="mb-10 text-xl text-blue-100 max-w-2xl mx-auto">
                                 Join hundreds of institutions worldwide transforming their teaching and
-                                learning experience with OBE-Nationwide.
+                                learning experience with Smart Campus HSTU.
                             </p>
                             <Link
                                 href={register()}
@@ -215,7 +215,7 @@ export default function Welcome({
                                     <GraduationCap className="h-6 w-6 text-white" />
                                 </div>
                                 <span className="text-xl font-bold tracking-tight text-slate-900 dark:text-white font-['Outfit']">
-                                    OBE<span className="text-blue-600 dark:text-blue-400">Nationwide</span>
+                                    Smart<span className="text-blue-600 dark:text-blue-400"> Campus HSTU</span>
                                 </span>
                             </div>
                             <p className="mb-8 max-w-sm text-slate-600 dark:text-slate-400">
@@ -255,7 +255,7 @@ export default function Welcome({
 
                     <div className="mt-16 border-t border-slate-200 pt-8 dark:border-white/10 flex flex-col sm:flex-row justify-between items-center gap-4">
                         <p className="text-xs text-slate-500 dark:text-slate-500">
-                            © 2026 OBE Nationwide Inc. All rights reserved.
+                            © 2026 Smart Campus HSTU. All rights reserved.
                         </p>
                         <div className="flex items-center gap-2">
                             <div className="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]"></div>

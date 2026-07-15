@@ -18,6 +18,9 @@ use App\Http\Controllers\UmissionController;
 use App\Http\Controllers\CourseAssignmentController;
 use App\Http\Controllers\MyCourseController;
 use App\Http\Controllers\TeacherController;
+use App\Http\Controllers\RoutineSetupController;
+use App\Http\Controllers\ClassRoutineController;
+use App\Http\Controllers\ExamRoutineController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Http\Controllers\Teacher\AssignmentController as TeacherAssignmentController;
@@ -186,6 +189,26 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // Support
         Route::post('/courses/{course}/support', [StudentSupportController::class, 'store'])->name('support.store');
+    });
+
+    // Routine Management (Admin only)
+    Route::middleware(['role:admin'])->group(function () {
+        Route::get('/routines/setup', [RoutineSetupController::class, 'index'])->name('routines.setup.index');
+        Route::post('/routines/setup/classroom', [RoutineSetupController::class, 'storeClassroom'])->name('routines.setup.storeClassroom');
+        Route::put('/routines/setup/classroom/{classroom}', [RoutineSetupController::class, 'updateClassroom'])->name('routines.setup.updateClassroom');
+        Route::delete('/routines/setup/classroom/{classroom}', [RoutineSetupController::class, 'destroyClassroom'])->name('routines.setup.destroyClassroom');
+
+        Route::post('/routines/setup/time-slot', [RoutineSetupController::class, 'storeTimeSlot'])->name('routines.setup.storeTimeSlot');
+        Route::put('/routines/setup/time-slot/{timeSlot}', [RoutineSetupController::class, 'updateTimeSlot'])->name('routines.setup.updateTimeSlot');
+        Route::delete('/routines/setup/time-slot/{timeSlot}', [RoutineSetupController::class, 'destroyTimeSlot'])->name('routines.setup.destroyTimeSlot');
+
+        Route::get('/routines/class', [ClassRoutineController::class, 'index'])->name('routines.class.index');
+        Route::post('/routines/class/generate', [ClassRoutineController::class, 'generate'])->name('routines.class.generate');
+        Route::post('/routines/class/clear', [ClassRoutineController::class, 'clear'])->name('routines.class.clear');
+
+        Route::get('/routines/exam', [ExamRoutineController::class, 'index'])->name('routines.exam.index');
+        Route::post('/routines/exam/generate', [ExamRoutineController::class, 'generate'])->name('routines.exam.generate');
+        Route::post('/routines/exam/clear', [ExamRoutineController::class, 'clear'])->name('routines.exam.clear');
     });
 });
 

@@ -136,6 +136,15 @@ export function AppSidebar() {
                 { title: 'Teachers', href: '/teachers', icon: Users },
             ],
         });
+
+        navGroups.push({
+            label: 'Routine Management',
+            items: [
+                { title: 'Class Routines', href: '/routines/class', icon: Calendar },
+                { title: 'Exam Routines', href: '/routines/exam', icon: FileText },
+                { title: 'Routine Setup', href: '/routines/setup', icon: ClipboardCheck },
+            ],
+        });
     }
 
     // 3. Your Courses (Teachers, Chairmen, Deans) - Now links to dedicated /my-courses page

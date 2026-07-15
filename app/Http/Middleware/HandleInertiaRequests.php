@@ -160,6 +160,11 @@ class HandleInertiaRequests extends Middleware
                     ? \App\Models\Faculty::where('dean_id', $request->user()->teacher->id)->exists()
                     : false,
             ],
+            'flash' => [
+                'success' => fn () => $request->session()->get('success'),
+                'error' => fn () => $request->session()->get('error'),
+                'warning' => fn () => $request->session()->get('warning'),
+            ],
         ];
     }
 }

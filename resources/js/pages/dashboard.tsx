@@ -114,7 +114,7 @@ export default function Dashboard() {
                             <div className="text-center max-w-md">
                                 <h4 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-2">Welcome, {user.name}!</h4>
                                 <p className="text-slate-500 dark:text-slate-400 text-sm mb-4">
-                                    Access your courses, assignments, and track your learning progress in the OBE Nationwide platform.
+                                    Access your courses, assignments, and track your learning progress in the Smart Campus HSTU platform.
                                 </p>
                                 <Link
                                     href="/student/dashboard"
@@ -201,7 +201,7 @@ export default function Dashboard() {
                             <div className="text-center max-w-md">
                                 <h4 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-2">Welcome back, {user.name}!</h4>
                                 <p className="text-slate-500 dark:text-slate-400 text-sm">
-                                    You are now in the OBE Nationwide platform. Use the sidebar to manage your academic programs, courses, and outcomes.
+                                    You are now in the Smart Campus HSTU platform. Use the sidebar to manage your academic programs, courses, and outcomes.
                                 </p>
                             </div>
                         </div>
@@ -234,7 +234,7 @@ export default function Dashboard() {
                         <div className="text-center max-w-md">
                             <h4 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-2">Welcome, {user.name}!</h4>
                             <p className="text-slate-500 dark:text-slate-400 text-sm">
-                                You are now in the OBE Nationwide platform.
+                                You are now in the Smart Campus HSTU platform.
                             </p>
                         </div>
                     </div>
